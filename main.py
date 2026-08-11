@@ -8,4 +8,8 @@ def get_cpu_temp():
         print("Thermal zone file not found.")
         return 0.0
 
-print(f"Current CPU temp: {get_cpu_temp()}°C")
+
+
+
+if __name__ == "__main__":
+    print(f"Current CPU temp: {get_cpu_temp()}°C")
