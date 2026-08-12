@@ -7,17 +7,17 @@ from logic.SystemMonitor import SystemMonitor
 
 # Set system update rates.
 SYSTEM_SAMPLE = 10 # Seconds between system stats checked (CPU Temp)
-SYSTEM_UPLOAD = 550 # Seconds between system stats uploaded, graph updated. Set a few seconds less than SYSTEM_SCHEDULER
-SYSTEM_SCHEDULER = 10 # Minutes between scheduler system run.
+SYSTEM_SCHEDULER = 60 # Minutes between scheduler system run.
 
 # Site monitoring is static at once per day.
 
 def run_monitor():
     scheduler = BackgroundScheduler()
+    system_upload = SYSTEM_SCHEDULER * 60 - 10
 
     scheduler.add_job(
         SystemMonitor.system_monitor, "interval", minutes=SYSTEM_SCHEDULER, id="system_monitor",
-        args=[SYSTEM_SAMPLE, SYSTEM_UPLOAD], next_run_time=datetime.now()
+        args=[SYSTEM_SAMPLE, system_upload], next_run_time=datetime.now()
     )
 
     scheduler.add_job(

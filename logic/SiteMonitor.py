@@ -23,7 +23,8 @@ class SiteMonitor:
         plt.figure(figsize = (10,5))
 
         sns.lineplot(data=df_melted, x="date", y="Value", hue="Metric")
-        plt.show()
+        plt.savefig("SiteGraph.png")
+        plt.close()
 
 
 if __name__ == "__main__":

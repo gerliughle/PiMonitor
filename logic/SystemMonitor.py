@@ -65,7 +65,8 @@ class SystemMonitor:
 
         df = pd.DataFrame(data, columns=("timestamp", "reading"))
         sns.catplot(x="timestamp", y="reading", data=df, kind="box")
-        plt.show()
+        plt.savefig("SystemGraph.png")
+        plt.close()
 
     @classmethod
     def system_monitor(cls, sample_interval, total_duration):
