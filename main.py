@@ -1,81 +1,39 @@
 import time
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import psutil
+from datetime import datetime
+from apscheduler.schedulers.background import BackgroundScheduler
 
-from Database import Database
+from logic.SiteMonitor import SiteMonitor
+from logic.SystemMonitor import SystemMonitor
 
+# Set system update rates.
+SYSTEM_SAMPLE = 10 # Seconds between system stats checked (CPU Temp)
+SYSTEM_UPLOAD = 550 # Seconds between system stats uploaded, graph updated. Set a few seconds less than SYSTEM_SCHEDULER
+SYSTEM_SCHEDULER = 10 # Minutes between scheduler system run.
 
-
-def get_cpu_temp():
-    """ Reads Pi CPU temp in C """
-    try:
-        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
-            temp_raw = int(f.read().strip())
-            if temp_raw != 27800:
-                return round(temp_raw / 1000.0, 2)
-
-    except Exception:
-        pass
-
-    # For testing
-    temps = psutil.sensors_temperatures()
-    cpu_temp = temps['coretemp'][0].current
-    return round(cpu_temp, 2)
-
-def collect_temp(sample_interval=10, total_duration=120):
-    """ Collects CPU temp at provided intervals. At end of duration, return sample list"""
-    readings = []
-
-    num_samples = int(total_duration / sample_interval)
-
-    print(f"Starting CPU collections: sampling every {sample_interval}s for {total_duration}s total.")
-
-    for i in range(num_samples):
-        temp = get_cpu_temp()
-        readings.append(temp)
-        print(f"Sample {i + 1}/{num_samples}: {temp}°C")
-        time.sleep(sample_interval)
-    return readings
-
-def temp_summary(readings):
-    if not readings:
-        return None
-
-    return{
-        "avg_temp": round(sum(readings) / len(readings), 2),
-        "max_temp": round(max(readings), 2),
-        "min_temp": round(min(readings), 2),
-        "sample_count": len(readings)
-    }
-
+# Site monitoring is static at once per day.
 
 def run_monitor():
-    while True:
-        readings = collect_temp(sample_interval=10, total_duration=120)
-        summary = temp_summary(readings)
-        print("\nSummary:")
-        for item in summary:
-            print(f"{item}: {summary[item]}")
-            print()
-        Database.upload_readings(readings)
-        log = Database.read_data()
-        build_graph(log)
+    scheduler = BackgroundScheduler()
 
-def build_graph(log_data):
-    data = []
-    for item in log_data:
-        for reading in item["readings"]:
-            row = [item["timestamp"], reading]
-            data.append(row)
+    scheduler.add_job(
+        SystemMonitor.system_monitor, "interval", minutes=SYSTEM_SCHEDULER, id="system_monitor",
+        args=[SYSTEM_SAMPLE, SYSTEM_UPLOAD], next_run_time=datetime.now()
+    )
 
-    df = pd.DataFrame(data, columns=("timestamp", "reading"))
-    sns.catplot(x="timestamp", y="reading", data=df, kind="box")
-    plt.show()
+    scheduler.add_job(
+        SiteMonitor.site_monitor, "cron", hour=1, minute=0, id="site_monitor", next_run_time=datetime.now()
+    )
+
+    scheduler.start()
+    print("Starting scheduled monitoring. Ctrl+C to stop.")
+
+    try:
+        while True:
+            time.sleep(1)
+    except(KeyboardInterrupt, SystemExit):
+        scheduler.shutdown()
+        print("Exiting scheduled monitoring.")
 
 
 if __name__ == "__main__":
-    print(f"Current CPU temp: {get_cpu_temp()}°C")
     run_monitor()
-
