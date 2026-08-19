@@ -54,10 +54,10 @@ class DisplayManager:
         try:
             image_path = "SystemGraph.png"
             self.generate_system_graph(image_path)
-            img = Image.open(image_path).convert("1")
-            rotated_img = img.rotate(90, expand=True)
-            resized_img = rotated_img.resize((self.width, self.height), Image.Resampling.LANCZOS)
-            dithered = resized_img.convert("L").convert("1", dither=Image.Dither.FLOYDSTEINBERG)
+            img = Image.open(image_path)
+            # rotated_img = img.rotate(90, expand=True)
+            # resized_img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
+            # dithered = resized_img.convert("L").convert("1", dither=Image.Dither.FLOYDSTEINBERG)
 
             if HAS_HARDWARE:
 
@@ -65,11 +65,11 @@ class DisplayManager:
                 epd.init()
                 red_image = Image.new("1", (epd.width, epd.height), 255)
 
-                epd.display(epd.getbuffer(dithered), epd.getbuffer(red_image))
+                epd.display(epd.getbuffer(img), epd.getbuffer(red_image))
                 epd.sleep()
             else:
                 dev_preview_path = "SystemGraph_preview.png"
-                dithered.save(dev_preview_path)
+                img.save(dev_preview_path)
 
 
         except Exception as e:
