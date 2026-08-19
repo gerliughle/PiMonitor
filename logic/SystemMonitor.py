@@ -1,6 +1,4 @@
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+
 import psutil
 import time
 
@@ -10,6 +8,7 @@ from database.Database import Database
 class SystemMonitor:
     system_log = None
     system_data = []
+
 
     @staticmethod
     def get_cpu_temp():
@@ -59,6 +58,7 @@ class SystemMonitor:
 
     @classmethod
     def system_monitor(cls, sample_interval, total_duration):
+
         readings = cls.collect_temp(sample_interval=sample_interval, total_duration=total_duration)
 
         summary = cls.temp_summary(readings)
@@ -73,5 +73,15 @@ class SystemMonitor:
             for reading in item["readings"]:
                 row = [item["timestamp"], reading]
                 cls.system_data.append(row)
+
+    @classmethod
+    def get_system_data(cls):
+        cls.system_log = Database.read_system_stats()
+        cls.system_data = []
+        for item in cls.system_log:
+            for reading in item["readings"]:
+                row = [item["timestamp"], reading]
+                cls.system_data.append(row)
+        return cls.system_data
 
 

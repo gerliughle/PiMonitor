@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from waveshare_epd import epd3in52b
+
 
 from database.CloudFlareTraffic import CloudFlareTraffic
 from database.Database import Database
