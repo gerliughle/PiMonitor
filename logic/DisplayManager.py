@@ -42,7 +42,7 @@ class DisplayManager:
             fliersize=2
         )
         ax.set_xlabel("")
-        ax.set_ylabel("CPU °C")
+        ax.set_ylabel("")
         ax.set_xticklabels([])
         ax.tick_params(axis='y', labelsize=8)
         sns.despine()
@@ -56,8 +56,10 @@ class DisplayManager:
             self.generate_system_graph(image_path)
             img = Image.open(image_path)
             # rotated_img = img.rotate(90, expand=True)
-            # resized_img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
+            resized_img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
             # dithered = resized_img.convert("L").convert("1", dither=Image.Dither.FLOYDSTEINBERG)
+
+            final_image = resized_img
 
             if HAS_HARDWARE:
 
@@ -65,11 +67,11 @@ class DisplayManager:
                 epd.init()
                 red_image = Image.new("1", (epd.width, epd.height), 255)
 
-                epd.display(epd.getbuffer(img), epd.getbuffer(red_image))
+                epd.display(epd.getbuffer(final_image), epd.getbuffer(red_image))
                 epd.sleep()
             else:
                 dev_preview_path = "SystemGraph_preview.png"
-                img.save(dev_preview_path)
+                final_image.save(dev_preview_path)
 
 
         except Exception as e:
