@@ -14,6 +14,7 @@ SYSTEM_SCHEDULER = 60 # Minutes between scheduler system run.
 
 def run_monitor():
     scheduler = BackgroundScheduler()
+    display_manager = DisplayManager()
     system_upload = SYSTEM_SCHEDULER * 60 - 10
 
     scheduler.add_job(
@@ -26,7 +27,7 @@ def run_monitor():
     )
 
     scheduler.add_job(
-        DisplayManager.update_screen,
+        display_manager.update_screen,
         'interval',
         minutes=10,
         id='display_manager'
