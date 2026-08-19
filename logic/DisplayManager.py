@@ -15,7 +15,7 @@ class DisplayManager:
 
     @staticmethod
     def generate_system_graph(output_path="SystemGraph.png"):
-        df = pd.DataFrame(SystemMonitor.system_log, columns=("timestamp", "reading"))
+        df = pd.DataFrame(SystemMonitor.system_data, columns=("timestamp", "reading"))
         g = sns.catplot(
             x="timestamp",
             y="reading",

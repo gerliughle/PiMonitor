@@ -9,6 +9,7 @@ from database.Database import Database
 
 class SystemMonitor:
     system_log = None
+    system_data = []
 
     @staticmethod
     def get_cpu_temp():
@@ -67,8 +68,10 @@ class SystemMonitor:
         print()
         Database.upload_cpu_readings(readings)
         cls.system_log = Database.read_system_stats()
-        data = []
+        cls.system_data = []
         for item in cls.system_log:
             for reading in item["readings"]:
                 row = [item["timestamp"], reading]
-                data.append(row)
+                cls.system_data.append(row)
+
+
