@@ -7,3 +7,6 @@ pymongo~=4.17.0
 requests~=2.34.2
 pillow
 spidev
+gpiozero
+rpi-lgpio
+spidev
