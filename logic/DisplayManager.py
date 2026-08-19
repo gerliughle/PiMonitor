@@ -39,7 +39,7 @@ class DisplayManager:
             Himage = Image.open(image_path).convert("RGB")
             Himage = Himage.resize((epd.width, epd.height))
 
-            epd.display(epd.getbugger(Himage))
+            epd.display(epd.getbuffer(Himage))
             epd.sleep()
 
         except Exception as e:

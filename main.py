@@ -2,9 +2,9 @@ import time
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 
-
 from logic.SiteMonitor import SiteMonitor
 from logic.SystemMonitor import SystemMonitor
+from logic.DisplayManager import DisplayManager
 
 # Set system update rates.
 SYSTEM_SAMPLE = 10 # Seconds between system stats checked (CPU Temp)
@@ -23,6 +23,13 @@ def run_monitor():
 
     scheduler.add_job(
         SiteMonitor.site_monitor, "cron", hour=1, minute=0, id="site_monitor", next_run_time=datetime.now()
+    )
+
+    scheduler.add_job(
+        DisplayManager.update_screen,
+        'interval',
+        minutes=10,
+        id='display_manager'
     )
 
     scheduler.start()
