@@ -16,6 +16,12 @@ class DisplayManager:
     @staticmethod
     def generate_system_graph(output_path="SystemGraph.png"):
         df = pd.DataFrame(SystemMonitor.system_data, columns=("timestamp", "reading"))
+
+        if pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
+            df["timestamp"] = df["timestamp"].dt.strftime("%H:%M")
+        else:
+            df["timestamp"] = df["timestamp"].astype(str)
+
         g = sns.catplot(
             x="timestamp",
             y="reading",
@@ -36,12 +42,13 @@ class DisplayManager:
             epd = epd3in52b.EPD()
             epd.init()
 
-            black_image = Image.open(image_path).convert("1")
-            black_image = black_image.resize((epd.width, epd.height))
+            img = Image.open(image_path).convert("1")
+            rotated_img = img.rotate(90, expand=True)
+            resized_img = rotated_img.resize((epd.width, epd.height))
 
             red_image = Image.new("1", (epd.width, epd.height), 255)
 
-            epd.display(epd.getbuffer(black_image), epd.getbuffer(red_image))
+            epd.display(epd.getbuffer(resized_img), epd.getbuffer(red_image))
             epd.sleep()
 
         except Exception as e:
