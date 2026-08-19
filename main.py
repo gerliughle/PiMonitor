@@ -17,6 +17,8 @@ def run_monitor():
     display_manager = DisplayManager()
     system_upload = SYSTEM_SCHEDULER * 60 - 10
 
+    SystemMonitor.system_monitor(10, 10)
+
     scheduler.add_job(
         SystemMonitor.system_monitor, "interval", minutes=SYSTEM_SCHEDULER, id="system_monitor",
         args=[SYSTEM_SAMPLE, system_upload], next_run_time=datetime.now()
