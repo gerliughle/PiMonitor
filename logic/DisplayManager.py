@@ -5,7 +5,7 @@ import seaborn as sns
 import pandas as pd
 from waveshare_epd import epd3in52b
 
-from SystemMonitor import SystemMonitor
+from logic.SystemMonitor import SystemMonitor
 
 class DisplayManager:
     def __init__(self, db_connection=None):
