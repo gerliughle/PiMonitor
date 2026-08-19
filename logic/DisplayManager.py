@@ -36,10 +36,12 @@ class DisplayManager:
             epd = epd3in52b.EPD()
             epd.init()
 
-            Himage = Image.open(image_path).convert("RGB")
-            Himage = Himage.resize((epd.width, epd.height))
+            black_image = Image.open(image_path).convert("1")
+            black_image = black_image.resize((epd.width, epd.height))
 
-            epd.display(epd.getbuffer(Himage))
+            red_image = Image.new("1", (epd.width, epd.height), 255)
+
+            epd.display(epd.getbuffer(black_image), epd.getbuffer(red_image))
             epd.sleep()
 
         except Exception as e:
