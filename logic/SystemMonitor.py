@@ -8,6 +8,7 @@ from database.Database import Database
 
 
 class SystemMonitor:
+    system_log = None
 
     @staticmethod
     def get_cpu_temp():
@@ -55,19 +56,6 @@ class SystemMonitor:
             "sample_count": len(readings)
         }
 
-    @staticmethod
-    def build_cpu_graph(log_data):
-        data = []
-        for item in log_data:
-            for reading in item["readings"]:
-                row = [item["timestamp"], reading]
-                data.append(row)
-
-        df = pd.DataFrame(data, columns=("timestamp", "reading"))
-        sns.catplot(x="timestamp", y="reading", data=df, kind="box")
-        plt.savefig("SystemGraph.png")
-        plt.close()
-
     @classmethod
     def system_monitor(cls, sample_interval, total_duration):
         readings = cls.collect_temp(sample_interval=sample_interval, total_duration=total_duration)
@@ -78,6 +66,9 @@ class SystemMonitor:
             print(f"{item}: {summary[item]}")
         print()
         Database.upload_cpu_readings(readings)
-        log = Database.read_system_stats()
-        cls.build_cpu_graph(log)
-
+        cls.system_log = Database.read_system_stats()
+        data = []
+        for item in cls.system_log:
+            for reading in item["readings"]:
+                row = [item["timestamp"], reading]
+                data.append(row)
