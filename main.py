@@ -30,7 +30,8 @@ def run_monitor():
         display_manager.update_screen,
         'interval',
         minutes=10,
-        id='display_manager'
+        id='display_manager',
+        next_run_time=datetime.now()
     )
 
     scheduler.start()
