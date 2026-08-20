@@ -3,6 +3,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+from matplotlib.font_manager import FontProperties
 
 from logic.SystemMonitor import SystemMonitor
 
@@ -24,6 +25,9 @@ class DisplayManager:
 
     @staticmethod
     def generate_system_graph(output_path="SystemGraph.png"):
+        font_path = "assets/Font.ttc"
+        custom_font = FontProperties(fname=font_path, size=9, weight="bold")
+
         data = SystemMonitor.get_system_data()
         df = pd.DataFrame(data, columns=("timestamp", "reading"))
         if pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
@@ -44,7 +48,10 @@ class DisplayManager:
         ax.set_xlabel("")
         ax.set_ylabel("")
         ax.set_xticklabels([])
-        ax.tick_params(axis='y', labelsize=8)
+        ax.tick_params(axis='y', labelsize=9, width=1.5, length=4)
+        for label in ax.get_yticklabels():
+            label.set_fontweight("bold")
+            label.set_fontproperties(custom_font)
         sns.despine()
         plt.tight_layout()
         plt.savefig(output_path, dpi=150, bbox_inches="tight")
