@@ -27,8 +27,6 @@ else:
 class DisplayManager:
     WIDTH = 240
     HEIGHT = 360
-    FULL_REFRESH_INTERVAL = 10
-    refresh_count = 0
 
     def __init__(self, db_connection=None):
         self.db = db_connection
@@ -126,7 +124,6 @@ class DisplayManager:
 
     @classmethod
     def update_screen(cls):
-        cls.refresh_count += 1
 
         try:
             cpu_df = SystemMonitor.get_df()
@@ -148,11 +145,8 @@ class DisplayManager:
             if HAS_HARDWARE:
 
                 epd = epd3in52b.EPD()
-                if cls.refresh_count <= 10:
-                    epd.init_reg()
-                else:
-                    epd.init()
-                    cls.refresh_count = 0
+                epd.init()
+
 
                 epd.display(epd.getbuffer(final_b), epd.getbuffer(final_r))
                 epd.sleep()
