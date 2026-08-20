@@ -33,9 +33,10 @@ class DisplayManager:
 
     @staticmethod
     def generate_layered_dashboard(cpu_df, traffic_df, site_status="Good"):
-        # BLACK EPAPER LAYER
-
-        fig_b, (ax_cpu, ax_tr) = plt.subplots(2, 1, figsize=(2.4, 3.2), dpi=150)
+        # --------------------------------------------------
+        # 1. BLACK EPAPER LAYER
+        # --------------------------------------------------
+        fig_b, (ax_cpu, ax_tr_black) = plt.subplots(2, 1, figsize=(2.4, 3.2), dpi=150)
 
         if not cpu_df.empty:
             sns.lineplot(
@@ -46,18 +47,30 @@ class DisplayManager:
                 color='black',
                 linewidth=2,
             )
+
+        # Black Layer Traffic: Left Y-Axis for total_requests
         if not traffic_df.empty:
             total_req_df = traffic_df[traffic_df["Metric"] == "total_requests"]
             sns.lineplot(
                 x="date",
                 y="Value",
                 data=total_req_df,
-                ax=ax_tr,
+                ax=ax_tr_black,
                 color="black",
                 linewidth=2
             )
+            # Create a twin secondary axis on the right side for visual scale matching
+            ax_tr_twin_b = ax_tr_black.twinx()
+            unique_df = traffic_df[traffic_df["Metric"] == "unique_visitors"]
+            if not unique_df.empty:
+                # Ghost plot to establish right y-axis scale on black layer
+                ax_tr_twin_b.plot(unique_df["date"], unique_df["Value"], color="none")
 
-        for ax, title in [(ax_cpu, "ServePi CPU °C"), (ax_tr, "Traffic")]:
+            ax_tr_twin_b.tick_params(axis='y', labelsize=8, width=1.5)
+            for label in ax_tr_twin_b.get_yticklabels():
+                label.set_fontproperties(custom_font)
+
+        for ax, title in [(ax_cpu, "ServePi CPU °C"), (ax_tr_black, "Traffic")]:
             ax.set_title(title, fontproperties=title_font, loc="left")
             ax.set_xlabel("")
             ax.set_ylabel("")
@@ -73,27 +86,33 @@ class DisplayManager:
         if site_status.lower() == "good":
             fig_b.text(0.68, 0.02, "Good", fontproperties=custom_font)
 
+        # Capture positions and right-axis limits
         pos_cpu = ax_cpu.get_position()
-        pos_tr = ax_tr.get_position()
+        pos_tr = ax_tr_black.get_position()
         xlim_cpu, ylim_cpu = ax_cpu.get_xlim(), ax_cpu.get_ylim()
-        xlim_tr, ylim_tr = ax_tr.get_xlim(), ax_tr.get_ylim()
+        xlim_tr = ax_tr_black.get_xlim()
 
-        # Save Black Layer
+        if not traffic_df.empty:
+            ylim_tr_right = ax_tr_twin_b.get_ylim()
+        else:
+            ylim_tr_right = (0, 1)
+
         fig_b.savefig("layer_black.png", dpi=150, bbox_inches="tight")
         plt.close(fig_b)
 
-
-        # RED EPAPER LAYER
-
-        fig_r, (ax_cpu_r, ax_tr_r) = plt.subplots(2, 1, figsize=(2.4, 3.2), dpi=150)
+        # --------------------------------------------------
+        # 2. RED EPAPER LAYER
+        # --------------------------------------------------
+        fig_r, (ax_cpu_r, ax_tr_r_base) = plt.subplots(2, 1, figsize=(2.4, 3.2), dpi=150)
         ax_cpu_r.set_position(pos_cpu)
-        ax_tr_r.set_position(pos_tr)
+        ax_tr_r_base.set_position(pos_tr)
 
-        for ax_r, xlim, ylim in [(ax_cpu_r, xlim_cpu, ylim_cpu), (ax_tr_r, xlim_tr, ylim_tr)]:
-            ax_r.set_xlim(xlim)
-            ax_r.set_ylim(ylim)
+        # Match left axes
+        ax_cpu_r.set_xlim(xlim_cpu);
+        ax_cpu_r.set_ylim(ylim_cpu)
+        ax_tr_r_base.set_xlim(xlim_tr)
 
-            # Turn off visible spines & ticks but keep layout padding
+        for ax_r in (ax_cpu_r, ax_tr_r_base):
             ax_r.spines['top'].set_visible(False)
             ax_r.spines['right'].set_visible(False)
             ax_r.spines['left'].set_color('white')
@@ -106,24 +125,33 @@ class DisplayManager:
             if not high_temps.empty:
                 ax_cpu_r.scatter(high_temps["timestamp"], high_temps["reading"], color="black", s=20)
 
+        # Red Layer Traffic: Right Y-Axis for unique_visitors
         if not traffic_df.empty:
+            ax_tr_red = ax_tr_r_base.twinx()
+            ax_tr_red.set_xlim(xlim_tr)
+            ax_tr_red.set_ylim(ylim_tr_right)
+
             unique_df = traffic_df[traffic_df["Metric"] == "unique_visitors"]
             sns.lineplot(
                 data=unique_df,
                 x="date",
                 y="Value",
-                ax=ax_tr_r,
-                color="black",
+                ax=ax_tr_red,
+                color="black",  # Black on red layer = physical RED
                 linewidth=2
             )
-            # Prevent Seaborn from auto-generating labels on the red layer
-            ax_tr_r.set_xlabel("")
-            ax_tr_r.set_ylabel("")
-            ax_tr_r.set_title("")
+
+            # Hide spines and labels on red twin axis, keeping right tick labels visible in white for layout padding
+            ax_tr_red.spines['top'].set_visible(False)
+            ax_tr_red.spines['left'].set_visible(False)
+            ax_tr_red.spines['bottom'].set_visible(False)
+            ax_tr_red.spines['right'].set_color('white')
+            ax_tr_red.tick_params(axis='y', colors='white')
+            ax_tr_red.set_xlabel("")
+            ax_tr_red.set_ylabel("")
 
         plt.tight_layout(rect=[0, 0.1, 1, 1])
 
-        # White structural text for identical tight crop padding
         fig_r.text(0.05, 0.02, "BonsaiTree.wiki status:", fontproperties=custom_font, color="white")
 
         if site_status.lower() != "good":
