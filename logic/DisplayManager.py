@@ -49,6 +49,7 @@ class DisplayManager:
             )
 
         # Black Layer Traffic: Left Y-Axis for total_requests
+        ax_tr_twin_b = None
         if not traffic_df.empty:
             total_req_df = traffic_df[traffic_df["Metric"] == "total_requests"]
             sns.lineplot(
@@ -59,17 +60,17 @@ class DisplayManager:
                 color="black",
                 linewidth=2
             )
-            # Create a twin secondary axis on the right side for visual scale matching
+            # Create twin secondary axis on right for unique visitors scale
             ax_tr_twin_b = ax_tr_black.twinx()
             unique_df = traffic_df[traffic_df["Metric"] == "unique_visitors"]
             if not unique_df.empty:
-                # Ghost plot to establish right y-axis scale on black layer
                 ax_tr_twin_b.plot(unique_df["date"], unique_df["Value"], color="none")
 
             ax_tr_twin_b.tick_params(axis='y', labelsize=8, width=1.5)
             for label in ax_tr_twin_b.get_yticklabels():
                 label.set_fontproperties(custom_font)
 
+        # Format main axes
         for ax, title in [(ax_cpu, "ServePi CPU °C"), (ax_tr_black, "Traffic")]:
             ax.set_title(title, fontproperties=title_font, loc="left")
             ax.set_xlabel("")
@@ -79,6 +80,10 @@ class DisplayManager:
             for label in ax.get_yticklabels():
                 label.set_fontproperties(custom_font)
             sns.despine(ax=ax)
+
+        # Despine the right twin axis explicitly!
+        if ax_tr_twin_b:
+            sns.despine(ax=ax_tr_twin_b, left=True, right=False)
 
         plt.tight_layout(rect=[0, 0.1, 1, 1])
 
@@ -92,13 +97,14 @@ class DisplayManager:
         xlim_cpu, ylim_cpu = ax_cpu.get_xlim(), ax_cpu.get_ylim()
         xlim_tr = ax_tr_black.get_xlim()
 
-        if not traffic_df.empty:
+        if ax_tr_twin_b:
             ylim_tr_right = ax_tr_twin_b.get_ylim()
         else:
             ylim_tr_right = (0, 1)
 
         fig_b.savefig("layer_black.png", dpi=150, bbox_inches="tight")
         plt.close(fig_b)
+
         # --------------------------------------------------
         # 2. RED EPAPER LAYER
         # --------------------------------------------------
@@ -106,8 +112,8 @@ class DisplayManager:
         ax_cpu_r.set_position(pos_cpu)
         ax_tr_r_base.set_position(pos_tr)
 
-        # Match axes limits from black layer
-        ax_cpu_r.set_xlim(xlim_cpu);
+        # Match base axes limits
+        ax_cpu_r.set_xlim(xlim_cpu)
         ax_cpu_r.set_ylim(ylim_cpu)
         ax_tr_r_base.set_xlim(xlim_tr)
 
@@ -127,9 +133,11 @@ class DisplayManager:
         # Red Layer Traffic: Right Y-Axis for unique_visitors
         if not traffic_df.empty:
             ax_tr_red = ax_tr_r_base.twinx()
+            ax_tr_red.set_position(pos_tr)  # Force twin axis to share exact bounding position
             ax_tr_red.set_xlim(xlim_tr)
             ax_tr_red.set_ylim(ylim_tr_right)
 
+            unique_df = traffic_df[traffic_df["Metric"] == "unique_visitors"]
             sns.lineplot(
                 data=unique_df,
                 x="date",
@@ -139,12 +147,7 @@ class DisplayManager:
                 linewidth=2
             )
 
-            # Clip lines strictly to the axes boundary box
-            ax_tr_red.set_clip_on(True)
-            for line in ax_tr_red.get_lines():
-                line.set_clip_on(True)
-
-            # Style spines & labels
+            # Match spine treatment and despining
             ax_tr_red.spines['top'].set_visible(False)
             ax_tr_red.spines['left'].set_visible(False)
             ax_tr_red.spines['bottom'].set_visible(False)
@@ -152,6 +155,9 @@ class DisplayManager:
             ax_tr_red.tick_params(axis='y', colors='white')
             ax_tr_red.set_xlabel("")
             ax_tr_red.set_ylabel("")
+
+            # Despine matching twin_b
+            sns.despine(ax=ax_tr_red, left=True, right=False)
 
         plt.tight_layout(rect=[0, 0.1, 1, 1])
 
