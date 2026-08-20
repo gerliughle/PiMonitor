@@ -31,14 +31,11 @@ class DisplayManager:
     def __init__(self, db_connection=None):
         self.db = db_connection
 
-
-
     @staticmethod
     def generate_layered_dashboard(cpu_df, traffic_df, site_status="Good"):
         # BLACK EPAPER LAYER
-        # Contains CPU Graph, Traffic Graph, Status text, and status if good.
 
-        fig_b, (ax_cpu, ax_tr) = plt.subplots(2,1, figsize=(2.4, 3.2), dpi=150)
+        fig_b, (ax_cpu, ax_tr) = plt.subplots(2, 1, figsize=(2.4, 3.2), dpi=150)
 
         if not cpu_df.empty:
             sns.lineplot(
@@ -78,25 +75,33 @@ class DisplayManager:
         if site_status.lower() == "good":
             fig_b.text(0.68, 0.02, "Good", fontproperties=custom_font)
 
-
         pos_cpu = ax_cpu.get_position()
         pos_tr = ax_tr.get_position()
         xlim_cpu, ylim_cpu = ax_cpu.get_xlim(), ax_cpu.get_ylim()
         xlim_tr, ylim_tr = ax_tr.get_xlim(), ax_tr.get_ylim()
+
+        # Save Black Layer
         fig_b.savefig("layer_black.png", dpi=150, bbox_inches="tight")
         plt.close(fig_b)
 
-        # Red Layer
-        # Contains cpu temp if high and site status if not good
-        fig_r, (ax_cpu_r, ax_tr_r) = plt.subplots(2,1, figsize=(2.4, 3.2), dpi=150)
+
+        # RED EPAPER LAYER
+
+        fig_r, (ax_cpu_r, ax_tr_r) = plt.subplots(2, 1, figsize=(2.4, 3.2), dpi=150)
         ax_cpu_r.set_position(pos_cpu)
         ax_tr_r.set_position(pos_tr)
 
         for ax_r, xlim, ylim in [(ax_cpu_r, xlim_cpu, ylim_cpu), (ax_tr_r, xlim_tr, ylim_tr)]:
             ax_r.set_xlim(xlim)
             ax_r.set_ylim(ylim)
-            ax_r.axis("off")
 
+            # Turn off visible spines & ticks but keep layout padding
+            ax_r.spines['top'].set_visible(False)
+            ax_r.spines['right'].set_visible(False)
+            ax_r.spines['left'].set_color('white')
+            ax_r.spines['bottom'].set_color('white')
+            ax_r.tick_params(axis='both', colors='white')
+            ax_r.set_xticklabels([])
 
         if not cpu_df.empty:
             high_temps = cpu_df[cpu_df["reading"] > 60]
@@ -113,14 +118,23 @@ class DisplayManager:
                 color="black",
                 linewidth=2
             )
+            # Prevent Seaborn from auto-generating labels on the red layer
+            ax_tr_r.set_xlabel("")
+            ax_tr_r.set_ylabel("")
+            ax_tr_r.set_title("")
 
+        plt.tight_layout(rect=[0, 0.1, 1, 1])
+
+        # White structural text for identical tight crop padding
         fig_r.text(0.05, 0.02, "BonsaiTree.wiki status:", fontproperties=custom_font, color="white")
 
         if site_status.lower() != "good":
             fig_r.text(0.68, 0.02, f"{site_status}", fontproperties=custom_font, color="black")
-        fig_r.savefig("layer_red.png", dpi=150)
+        else:
+            fig_r.text(0.68, 0.02, "Good", fontproperties=custom_font, color="white")
+
+        fig_r.savefig("layer_red.png", dpi=150, bbox_inches="tight")
         plt.close(fig_r)
-        print("Dashboard images generated.")
 
     @classmethod
     def update_screen(cls):
