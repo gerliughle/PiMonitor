@@ -1,7 +1,7 @@
 
 import psutil
 import time
-
+import pandas as pd
 from database.Database import Database
 
 
@@ -83,5 +83,17 @@ class SystemMonitor:
                 row = [item["timestamp"], reading]
                 cls.system_data.append(row)
         return cls.system_data
+
+    @classmethod
+    def get_df(cls):
+
+        data = cls.get_system_data()
+        df = pd.DataFrame(data, columns=("timestamp", "reading"))
+        if pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
+            df["timestamp"] = df["timestamp"].dt.strftime("%H:%M")
+        else:
+            df["timestamp"] = df["timestamp"].astype(str)
+        return df
+
 
 

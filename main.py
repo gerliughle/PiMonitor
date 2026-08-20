@@ -23,7 +23,7 @@ def run_monitor():
     )
 
     scheduler.add_job(
-        SiteMonitor.site_monitor, "cron", hour=1, minute=0, id="site_monitor", next_run_time=datetime.now()
+        SiteMonitor.site_monitor, "cron", hour=1, minute=0, id="site_monitor"
     )
 
     scheduler.add_job(
