@@ -37,13 +37,24 @@ class DisplayManager:
 
 
         fix, ax = plt.subplots(figsize=(3.6, 2.4), dpi=150)
-        sns.boxplot(
+        # sns.boxplot(
+        #     x="timestamp",
+        #     y="reading",
+        #     data=df,
+        #     # color='white',
+        #     # linecolor='black',
+        #     # fliersize=2
+        # )
+
+        sns.lineplot(
             x="timestamp",
             y="reading",
             data=df,
-            color='white',
-            linecolor='black',
-            fliersize=2
+            ax=ax,
+            color='black',
+            linewidth=2,
+            errorbar=("pi", 100),
+            err_style="band"
         )
         ax.set_xlabel("")
         ax.set_ylabel("")
