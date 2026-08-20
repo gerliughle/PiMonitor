@@ -29,7 +29,7 @@ def run_monitor():
     scheduler.add_job(
         display_manager.update_screen,
         'interval',
-        minutes=10,
+        minutes=30,
         id='display_manager',
         next_run_time=datetime.now()
     )
