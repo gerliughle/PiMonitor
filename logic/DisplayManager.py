@@ -99,7 +99,6 @@ class DisplayManager:
 
         fig_b.savefig("layer_black.png", dpi=150, bbox_inches="tight")
         plt.close(fig_b)
-
         # --------------------------------------------------
         # 2. RED EPAPER LAYER
         # --------------------------------------------------
@@ -107,7 +106,7 @@ class DisplayManager:
         ax_cpu_r.set_position(pos_cpu)
         ax_tr_r_base.set_position(pos_tr)
 
-        # Match left axes
+        # Match axes limits from black layer
         ax_cpu_r.set_xlim(xlim_cpu);
         ax_cpu_r.set_ylim(ylim_cpu)
         ax_tr_r_base.set_xlim(xlim_tr)
@@ -131,17 +130,21 @@ class DisplayManager:
             ax_tr_red.set_xlim(xlim_tr)
             ax_tr_red.set_ylim(ylim_tr_right)
 
-            unique_df = traffic_df[traffic_df["Metric"] == "unique_visitors"]
             sns.lineplot(
                 data=unique_df,
                 x="date",
                 y="Value",
                 ax=ax_tr_red,
-                color="black",  # Black on red layer = physical RED
+                color="black",
                 linewidth=2
             )
 
-            # Hide spines and labels on red twin axis, keeping right tick labels visible in white for layout padding
+            # Clip lines strictly to the axes boundary box
+            ax_tr_red.set_clip_on(True)
+            for line in ax_tr_red.get_lines():
+                line.set_clip_on(True)
+
+            # Style spines & labels
             ax_tr_red.spines['top'].set_visible(False)
             ax_tr_red.spines['left'].set_visible(False)
             ax_tr_red.spines['bottom'].set_visible(False)
