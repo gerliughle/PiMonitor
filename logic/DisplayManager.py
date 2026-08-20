@@ -47,17 +47,15 @@ class DisplayManager:
                 linewidth=2,
             )
         if not traffic_df.empty:
+            total_req_df = traffic_df[traffic_df["Metric"] == "total_requests"]
             sns.lineplot(
                 x="date",
                 y="Value",
-                hue="Metric",
-                style="Metric",
-                data=traffic_df,
+                data=total_req_df,
                 ax=ax_tr,
-                palette=["black", "black"],
+                color="black",
                 linewidth=2
             )
-            ax_tr.get_legend().remove()
 
         for ax, title in [(ax_cpu, "ServePi CPU °C"), (ax_tr, "Traffic")]:
             ax.set_title(title, fontproperties=title_font, loc="left")
