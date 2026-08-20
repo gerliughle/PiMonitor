@@ -76,25 +76,34 @@ class DisplayManager:
         fig_b.text(0.05, 0.02, "BonsaiTree.wiki status:", fontproperties=custom_font)
         if site_status.lower() == "good":
             fig_b.text(0.68, 0.02, "Good", fontproperties=custom_font)
+
+
+        pos_cpu = ax_cpu.get_position()
+        pos_tr = ax_tr.get_position()
+        xlim_cpu, ylim_cpu = ax_cpu.get_xlim(), ax_cpu.get_ylim()
+        xlim_tr, ylim_tr = ax_tr.get_xlim(), ax_tr.get_ylim()
         fig_b.savefig("layer_black.png", dpi=150, bbox_inches="tight")
         plt.close(fig_b)
 
         # Red Layer
         # Contains cpu temp if high and site status if not good
         fig_r, (ax_cpu_r, ax_tr_r) = plt.subplots(2,1, figsize=(2.4, 3.2), dpi=150)
+        ax_cpu_r.set_position(pos_cpu)
+        ax_tr_r.set_position(pos_tr)
+
+        for ax_r, xlim, ylim in [(ax_cpu_r, xlim_cpu, ylim_cpu), (ax_tr_r, xlim_tr, ylim_tr)]:
+            ax_r.set_xlim(xlim)
+            ax_r.set_ylim(ylim)
+            ax_r.axis("off")
 
 
         if not cpu_df.empty:
             high_temps = cpu_df[cpu_df["reading"] > 60]
             if not high_temps.empty:
-                ax_cpu_r.set_xlim(ax_cpu.get_xlim())
-                ax_cpu_r.set_ylim(ax_cpu.get_ylim())
                 ax_cpu_r.scatter(high_temps["timestamp"], high_temps["reading"], color="black", s=20)
 
         if not traffic_df.empty:
             unique_df = traffic_df[traffic_df["Metric"] == "unique_visitors"]
-            ax_tr_r.set_xlim(ax.get_xlim())
-            ax_tr_r.set_ylim(ax.get_ylim())
             sns.lineplot(
                 data=unique_df,
                 x="date",
@@ -104,14 +113,12 @@ class DisplayManager:
                 linewidth=2
             )
 
-        for ax in (ax_cpu_r, ax_tr_r):
-            ax.axis("off")
+        # for ax in (ax_cpu_r, ax_tr_r):
+        #     ax.axis("off")
 
         if site_status.lower() != "good":
             fig_r.text(0.68, 0.02, f"{site_status}", fontproperties=custom_font, color="black")
-
-        plt.tight_layout(rect=[0, 0.1, 1, 1])
-        fig_r.savefig("layer_red.png", dpi=150, bbox_inches="tight")
+        fig_r.savefig("layer_red.png", dpi=150)
         plt.close(fig_r)
         print("Dashboard images generated.")
 
