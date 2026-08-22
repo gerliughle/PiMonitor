@@ -1,0 +1,11 @@
+pandas~=3.0.5
+seaborn~=0.13.2
+matplotlib~=3.11.1
+psutil~=7.2.2
+APScheduler~=3.11.3
+pymongo~=4.17.0
+requests~=2.34.2
+pillow
+spidev
+gpiozero
+rpi-lgpio
