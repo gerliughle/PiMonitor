@@ -1,4 +1,6 @@
 import os
+
+import numpy as np
 from PIL import Image, ImageFilter, ImageDraw, ImageText, ImageFont
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -8,10 +10,10 @@ import matplotlib.font_manager as fm
 from logic.SystemMonitor import SystemMonitor
 from logic.SiteMonitor import SiteMonitor
 
-
 HAS_HARDWARE = False
 try:
     from waveshare_epd import epd3in52b
+
     HAS_HARDWARE = True
 except(ImportError, OSError):
     print("[DisplayManager] Failed to import epd3in52b epaper display. Running dev mode.")
@@ -25,6 +27,7 @@ if os.path.exists(FONT_PATH):
 else:
     custom_font = fm.FontProperties(size=10, weight="bold")
     title_font = fm.FontProperties(size=13, weight="bold")
+
 
 class DisplayManager:
     WIDTH = 480
@@ -41,18 +44,22 @@ class DisplayManager:
         May not build entire image."""
         print("Generating Image")
 
-        fig, ax = plt.subplots(2, 1, figsize=(2.4, 3), dpi=400) # Leaving space at top
+        fig, ax = plt.subplots(2, 1, figsize=(2.4, 3), dpi=400)  # Leaving space at top
         # sns.set_context("poster", font_scale=0.5)
         sns.axes_style({"xtick.bottom": False})
 
         if not cpu_df.empty:
             sns.boxenplot(cpu_df,
-                        x="timestamp",
-                        y="reading",
-                        color="black",
-                        fill=False,
-                        # linewidth=2,
-                        ax=ax[0])
+                          x="timestamp",
+                          y="reading",
+                          color="black",
+                          fill=False,
+                          flier_kws={"marker": ".",
+                                     "facecolor": "black",
+                                     "linewidth": 1.5
+                                     },
+                          ax=ax[0])
+
             ax[0].set_xlabel("")
             ax[0].set_ylabel("", fontproperties=title_font)
             ax[0].set_xticks([])
@@ -60,14 +67,19 @@ class DisplayManager:
 
         else:
             print("Error, no CPU dataframe.")
+
         if not traffic_df.empty:
             requests_df = traffic_df[traffic_df["Metric"] == "unique_visitors"]
-            sns.lineplot(requests_df,
-                         x="date",
-                         y="Value",
-                         ax=ax[1],
-                         # linewidth=2,
-                         color="black")
+
+            sns.regplot(requests_df,
+                        x=requests_df.index,
+                        y="Value",
+                        order=2,
+                        ci=None,
+                        marker='.',
+                        line_kws={"linestyle": ":"},
+                        ax=ax[1],
+                        color="black")
             ax[1].set_xlabel("")
             ax[1].set_ylabel("")
             ax[1].set_xticks([])
@@ -81,7 +93,6 @@ class DisplayManager:
         fig.savefig("layer_black.png")
         plt.close(fig)
         print("Image Generated.")
-
 
     @classmethod
     def update_screen(cls):
@@ -102,23 +113,18 @@ class DisplayManager:
             dashboard_b = Image.new("1", (240, 360), 255)
             dashboard_b.paste(new_img, (-5, 60))
 
-
-
-
             title = ImageText.Text("ServePi!", title_ImageFont)
             title.embed_color()
 
             status = ImageText.Text("BonsaiTree.Wiki status: ", text_ImageFont)
             status.embed_color()
 
-
             b = ImageDraw.Draw(dashboard_b)
-            b.text((20,10), title, 0)
+            b.text((20, 10), title, 0)
             b.text((20, 34), status, 0)
 
             # Red image
             dashboard_r = Image.new("1", (240, 360), 255)
-
 
             site_status = SiteMonitor.get_status()
             if site_status == "Good":
@@ -137,7 +143,6 @@ class DisplayManager:
                 epd = epd3in52b.EPD()
                 epd.init()
 
-
                 epd.display(epd.getbuffer(dashboard_b), epd.getbuffer(dashboard_r))
                 epd.sleep()
             else:
@@ -147,6 +152,7 @@ class DisplayManager:
 
         except Exception as e:
             print(f"[DisplayManager] Refresh failed: {e}")
+
 
 if __name__ == "__main__":
     DisplayManager.update_screen()
