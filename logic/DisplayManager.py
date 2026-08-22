@@ -46,7 +46,7 @@ class DisplayManager:
 
         layout = [['CB', 'CK'],
                   ['T', 'T']]
-        fig, ax = plt.subplot_mosaic(layout, figsize=(2.4, 3), dpi=400, width_ratios=[5,1])  # Leaving space at top
+        fig, ax = plt.subplot_mosaic(layout, figsize=(2.4, 3), dpi=400, width_ratios=[5, 1])  # Leaving space at top
         sns.axes_style({"xtick.bottom": False})
 
         sns.boxenplot(cpu_df,
@@ -70,7 +70,9 @@ class DisplayManager:
 
         sns.kdeplot(cpu_df,
                     y='reading',
-                    ax=ax['CK'])
+                    ax=ax['CK'],
+                    color="black",
+                    linewidth=1.5)
         ax['CK'].set_xlabel("")
         ax['CK'].set_ylabel("")
         ax['CK'].set_xticks([])
@@ -80,14 +82,22 @@ class DisplayManager:
         requests_df = traffic_df[traffic_df["Metric"] == "unique_visitors"]
 
         sns.regplot(requests_df,
-                            x=requests_df.index,
-                            y="Value",
-                            order=2,
-                            ci=None,
-                            marker='.',
-                            line_kws={"linestyle": ":"},
-                            color="black",
-                            ax=ax['T'])
+                    x=requests_df.index,
+                    y="Value",
+                    order=2,
+                    ci=None,
+                    marker='.',
+                    scatter=False,
+                    line_kws={"linestyle": ":"},
+                    color="black",
+                    ax=ax['T'])
+        sns.lineplot(requests_df,
+                     x=requests_df.index,
+                     y="Value",
+                     ax=ax['T'],
+                     color="black",
+                     linewidth=2,
+                     )
         ax['T'].set_xlabel("")
         ax['T'].set_ylabel("")
         ax['T'].set_xticks([])
