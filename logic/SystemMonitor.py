@@ -1,9 +1,7 @@
-
 import psutil
 import time
 import pandas as pd
 from database.Database import Database
-
 
 class SystemMonitor:
     system_log = None
@@ -86,7 +84,6 @@ class SystemMonitor:
 
     @classmethod
     def get_df(cls):
-
         data = cls.get_system_data()
         df = pd.DataFrame(data, columns=("timestamp", "reading"))
         if pd.api.types.is_datetime64_any_dtype(df["timestamp"]):

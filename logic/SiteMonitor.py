@@ -1,10 +1,9 @@
-import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 import requests
 
 from database.CloudFlareTraffic import CloudFlareTraffic
 from database.Database import Database
+from datetime import datetime, timezone
 
 
 class SiteMonitor:
@@ -33,6 +32,7 @@ class SiteMonitor:
         df = pd.DataFrame(log)
         df_melted = pd.melt(df, id_vars=["date"], value_vars=["total_requests", "unique_visitors"],
                             var_name="Metric", value_name="Value")
+        df_melted = df_melted[df_melted["date"] != datetime.now(timezone.utc).strftime("%Y-%m-%d")]
         return df_melted
 
 
