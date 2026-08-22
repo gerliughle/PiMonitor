@@ -1,5 +1,5 @@
 import os
-from PIL import Image
+from PIL import Image, ImageFilter, ImageDraw, ImageText, ImageFont
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
@@ -16,13 +16,15 @@ try:
 except(ImportError, OSError):
     print("[DisplayManager] Failed to import epd3in52b epaper display. Running dev mode.")
 
-FONT_PATH = os.path.join(os.path.dirname(__file__), "..", "assets", "Font.ttc")
+FONT_PATH = os.path.join(os.path.dirname(__file__), "..", "assets", "determination.ttf")
 if os.path.exists(FONT_PATH):
-    custom_font = fm.FontProperties(fname=FONT_PATH, size=9)
-    title_font = fm.FontProperties(fname=FONT_PATH, size=10, weight="bold")
+    custom_font = fm.FontProperties(fname=FONT_PATH, size=10, weight="bold")
+    title_font = fm.FontProperties(fname=FONT_PATH, size=13)
+    title_ImageFont = ImageFont.truetype(FONT_PATH, 18)
+    text_ImageFont = ImageFont.truetype(FONT_PATH, 12)
 else:
-    custom_font = fm.FontProperties(size=9, weight="bold")
-    title_font = fm.FontProperties(size=10, weight="bold")
+    custom_font = fm.FontProperties(size=10, weight="bold")
+    title_font = fm.FontProperties(size=13, weight="bold")
 
 class DisplayManager:
     WIDTH = 480
@@ -39,8 +41,8 @@ class DisplayManager:
         May not build entire image."""
         print("Generating Image")
 
-        fig, ax = plt.subplots(2, 1, figsize=(4.8, 6)) # Leaving space at top
-        sns.set_context("poster", font_scale=0.5)
+        fig, ax = plt.subplots(2, 1, figsize=(2.4, 3), dpi=400) # Leaving space at top
+        # sns.set_context("poster", font_scale=0.5)
         sns.axes_style({"xtick.bottom": False})
 
         if not cpu_df.empty:
@@ -52,8 +54,9 @@ class DisplayManager:
                         # linewidth=2,
                         ax=ax[0])
             ax[0].set_xlabel("")
-            ax[0].set_ylabel("CPU Temp")
-            ax[0].set_xticklabels([])
+            ax[0].set_ylabel("", fontproperties=title_font)
+            ax[0].set_xticks([])
+            ax[0].set_title("CPU °C", fontproperties=title_font, loc="left")
 
         else:
             print("Error, no CPU dataframe.")
@@ -64,47 +67,70 @@ class DisplayManager:
                          y="Value",
                          ax=ax[1],
                          # linewidth=2,
-                         color="r")
+                         color="black")
             ax[1].set_xlabel("")
-            ax[1].set_ylabel("Traffic")
-            ax[1].set_xticklabels([])
+            ax[1].set_ylabel("")
+            ax[1].set_xticks([])
+            ax[1].set_title("Traffic", fontproperties=title_font, loc="left")
         else:
             print("Error, no Traffic dataframe.")
 
-
-        sns.despine()
+        sns.despine(bottom=True)
         fig.tight_layout()
 
-
-        fig.savefig("test_plot.png")
+        fig.savefig("layer_black.png")
         plt.close(fig)
         print("Image Generated.")
 
 
-
-
-
-
-
     @classmethod
     def update_screen(cls):
-
         try:
             cpu_df = SystemMonitor.get_df()
             traffic_df = SiteMonitor.get_df()
             site_status = SiteMonitor.get_status()
             cls.generate_layered_dashboard(cpu_df, traffic_df)
 
-            black_img = Image.open("layer_black.png")
-            red_img = Image.open("layer_red.png")
+            black_img = Image.open("layer_black.png").convert("L")
+            black_img = black_img.resize((240, 300), resample=Image.Resampling.LANCZOS)
 
-            # rotated_img = img.rotate(90, expand=True)
-            resized_b = black_img.resize((cls.WIDTH, cls.HEIGHT), Image.Resampling.LANCZOS)
-            resized_r = red_img.resize((cls.WIDTH, cls.HEIGHT), Image.Resampling.LANCZOS)
-            # dithered = resized_img.convert("L").convert("1", dither=Image.Dither.FLOYDSTEINBERG)
+            # for i in range(100, 150):
+            #     new_img = black_img.point(lambda x: 255 if x > i else 0).convert("1")
+            #     new_img.save(f"{i}_black_img_preview.png")
+            new_img = black_img.point(lambda x: 255 if x > 127 else 0).convert("1")
 
-            final_b = resized_b
-            final_r = resized_r
+            dashboard_b = Image.new("1", (240, 360), 255)
+            dashboard_b.paste(new_img, (-5, 60))
+
+
+
+
+            title = ImageText.Text("ServePi!", title_ImageFont)
+            title.embed_color()
+
+            status = ImageText.Text("BonsaiTree.Wiki status: ", text_ImageFont)
+            status.embed_color()
+
+
+            b = ImageDraw.Draw(dashboard_b)
+            b.text((20,10), title, 0)
+            b.text((20, 34), status, 0)
+
+            # Red image
+            dashboard_r = Image.new("1", (240, 360), 255)
+
+
+            site_status = SiteMonitor.get_status()
+            if site_status == "Good":
+
+                status_text = ImageText.Text("Good!", text_ImageFont)
+                status_text.embed_color()
+                b.text((175, 34), status_text, 0)
+            else:
+                r = ImageDraw.Draw(dashboard_r)
+                status_text = ImageText.Text(site_status, text_ImageFont)
+                status_text.embed_color()
+                r.text((175, 34), status_text, 0)
 
             if HAS_HARDWARE:
 
@@ -112,12 +138,15 @@ class DisplayManager:
                 epd.init()
 
 
-                epd.display(epd.getbuffer(final_b), epd.getbuffer(final_r))
+                epd.display(epd.getbuffer(dashboard_b), epd.getbuffer(dashboard_r))
                 epd.sleep()
             else:
-                final_b.save("black_preview.png")
-                final_r.save("red_preview.png")
+                dashboard_b.save("dashboard_b_preview.png")
+                dashboard_r.save("dashboard_r_preview.png")
 
 
         except Exception as e:
             print(f"[DisplayManager] Refresh failed: {e}")
+
+if __name__ == "__main__":
+    DisplayManager.update_screen()
