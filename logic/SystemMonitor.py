@@ -1,9 +1,7 @@
-
 import psutil
 import time
 import pandas as pd
 from database.Database import Database
-
 
 class SystemMonitor:
     system_log = None

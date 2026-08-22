@@ -6,6 +6,9 @@ APScheduler~=3.11.3
 pymongo~=4.17.0
 requests~=2.34.2
 pillow
-spidev
 gpiozero
-rpi-lgpio
+
+
+spidev; sys_platform == 'linux'
+lgpio; sys_platform == 'linux'
+rpi-lgpio; sys_platform == 'linux'
