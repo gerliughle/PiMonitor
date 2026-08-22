@@ -45,9 +45,7 @@ class DisplayManager:
         print("Generating Image")
 
         fig, ax = plt.subplots(2, 1, figsize=(2.4, 3), dpi=400)  # Leaving space at top
-        # sns.set_context("poster", font_scale=0.5)
         sns.axes_style({"xtick.bottom": False})
-
         if not cpu_df.empty:
             sns.boxenplot(cpu_df,
                           x="timestamp",
@@ -61,9 +59,11 @@ class DisplayManager:
                           ax=ax[0])
 
             ax[0].set_xlabel("")
-            ax[0].set_ylabel("", fontproperties=title_font)
+            ax[0].set_ylabel("")
             ax[0].set_xticks([])
             ax[0].set_title("CPU °C", fontproperties=title_font, loc="left")
+            for label in ax[0].get_yticklabels():
+                label.set_fontproperties(custom_font)
 
         else:
             print("Error, no CPU dataframe.")
@@ -83,7 +83,9 @@ class DisplayManager:
             ax[1].set_xlabel("")
             ax[1].set_ylabel("")
             ax[1].set_xticks([])
-            ax[1].set_title("Traffic", fontproperties=title_font, loc="left")
+            ax[1].set_title("Site Requests", fontproperties=title_font, loc="left")
+            for label in ax[1].get_yticklabels():
+                label.set_fontproperties(custom_font)
         else:
             print("Error, no Traffic dataframe.")
 
