@@ -44,50 +44,56 @@ class DisplayManager:
         May not build entire image."""
         print("Generating Image")
 
-        fig, ax = plt.subplots(2, 1, figsize=(2.4, 3), dpi=400)  # Leaving space at top
+        layout = [['CB', 'CK'],
+                  ['T', 'T']]
+        fig, ax = plt.subplot_mosaic(layout, figsize=(2.4, 3), dpi=400, width_ratios=[5,1])  # Leaving space at top
         sns.axes_style({"xtick.bottom": False})
-        if not cpu_df.empty:
-            sns.boxenplot(cpu_df,
-                          x="timestamp",
-                          y="reading",
-                          color="black",
-                          fill=False,
-                          flier_kws={"marker": ".",
-                                     "facecolor": "black",
-                                     "linewidth": 1.5
-                                     },
-                          ax=ax[0])
 
-            ax[0].set_xlabel("")
-            ax[0].set_ylabel("")
-            ax[0].set_xticks([])
-            ax[0].set_title("CPU °C", fontproperties=title_font, loc="left")
-            for label in ax[0].get_yticklabels():
-                label.set_fontproperties(custom_font)
+        sns.boxenplot(cpu_df,
+                      x="timestamp",
+                      y="reading",
+                      color="black",
+                      fill=False,
+                      flier_kws={"marker": ".",
+                                 "facecolor": "black",
+                                 "linewidth": 1.5
+                                 },
+                      ax=ax['CB']
+                      )
 
-        else:
-            print("Error, no CPU dataframe.")
+        ax['CB'].set_xlabel("")
+        ax['CB'].set_ylabel("")
+        ax['CB'].set_xticks([])
+        ax['CB'].set_title("CPU °C", fontproperties=title_font, loc="left")
+        for label in ax['CB'].get_yticklabels():
+            label.set_fontproperties(custom_font)
 
-        if not traffic_df.empty:
-            requests_df = traffic_df[traffic_df["Metric"] == "unique_visitors"]
+        sns.kdeplot(cpu_df,
+                    y='reading',
+                    ax=ax['CK'])
+        ax['CK'].set_xlabel("")
+        ax['CK'].set_ylabel("")
+        ax['CK'].set_xticks([])
+        ax['CK'].set_yticks([])
+        ax['CK'].set_title("")
 
-            sns.regplot(requests_df,
-                        x=requests_df.index,
-                        y="Value",
-                        order=2,
-                        ci=None,
-                        marker='.',
-                        line_kws={"linestyle": ":"},
-                        ax=ax[1],
-                        color="black")
-            ax[1].set_xlabel("")
-            ax[1].set_ylabel("")
-            ax[1].set_xticks([])
-            ax[1].set_title("Site Requests", fontproperties=title_font, loc="left")
-            for label in ax[1].get_yticklabels():
-                label.set_fontproperties(custom_font)
-        else:
-            print("Error, no Traffic dataframe.")
+        requests_df = traffic_df[traffic_df["Metric"] == "unique_visitors"]
+
+        sns.regplot(requests_df,
+                            x=requests_df.index,
+                            y="Value",
+                            order=2,
+                            ci=None,
+                            marker='.',
+                            line_kws={"linestyle": ":"},
+                            color="black",
+                            ax=ax['T'])
+        ax['T'].set_xlabel("")
+        ax['T'].set_ylabel("")
+        ax['T'].set_xticks([])
+        ax['T'].set_title("Site Requests", fontproperties=title_font, loc="left")
+        for label in ax['T'].get_yticklabels():
+            label.set_fontproperties(custom_font)
 
         sns.despine(bottom=True)
         fig.tight_layout()
